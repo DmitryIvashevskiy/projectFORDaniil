@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание заявки</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('#requestForm').on('submit', function(event){
+                event.preventDefault();
+                $.ajax({
+                    url: "{% url 'request_create' %}",
+                    method: "POST",
+                    data: $(this).serialize(),
+                    success: function(data){
+                        if (data.success) {
+                            alert('Заявка успешно отправлена.');
+                            loadRequests();
+                        }
+                    },
+                    error: function(xhr){
+                        if (xhr.status === 400) {
+                            let errors = xhr.responseJSON.errors;
+                            for (let field in errors) {
+                                alert(errors[field][0]);
+                            }
+                        }
+                    }
+                });
+            });
+
+            function loadRequests() {
+                $.ajax({
+                    url: "{% url 'get_requests' %}",
+                    method: "GET",
+                    success: function(data){
+                        $('#requestsTable tbody').empty();
+                        data.forEach(function(request){
+                            let row = '<tr>' +
+                                '<td>' + request.id + '</td>' +
+                                '<td>' + request.title + '</td>' +
+                                '<td>' + request.created_at + '</td>' +
+                                '<td>' + request.resolve_time_seconds + '</td>' +
+                                '<td>' + request.status + '</td>' +
+                                '</tr>';
+                            $('#requestsTable tbody').append(row);
+                        });
+                    }
+                });
+            }
+
+            loadRequests();
+        });
+    </script>
+</head>
+<body>
+
+<h2>Создание заявки</h2>
+<form id="requestForm" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Отправить</button>
+</form>
+
+<h3>Ваши заявки</h3>
+<table id="requestsTable" border="1">
+    <thead>
+        <tr>
+            <th>Идентификатор заявки</th>
+            <th>Название заявки</th>
+            <th>Дата создания заявки</th>
+            <th>Время на решение в сек.</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+    </tbody>
+</table>
+
+</body>
+</html>
